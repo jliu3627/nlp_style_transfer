@@ -1,8 +1,16 @@
+"""Baseline T5 rewriting experiment for stage 2 of the project pipeline.
+
+This script is intentionally kept under experiments because it trains a rewrite
+model, while the production package currently implements stage 1: toxicity
+classification.
+"""
+
 from datasets import Dataset
-from transformers import T5Tokenizer, T5ForConditionalGeneration
-from transformers import Seq2SeqTrainer, Seq2SeqTrainingArguments, DataCollatorForSeq2Seq
+from transformers import T5ForConditionalGeneration, T5Tokenizer
+from transformers import DataCollatorForSeq2Seq, Seq2SeqTrainer, Seq2SeqTrainingArguments
 import pandas as pd
 import torch
+
 
 device = torch.device("mps" if torch.backends.mps.is_available() else "cpu")
 
@@ -10,19 +18,21 @@ MODEL_NAME = "t5-small"
 MAX_INPUT_LEN = 128
 MAX_TARGET_LEN = 128
 
-# Example: replace with your real ParaDetox file loading
-df = pd.DataFrame({
-    "source": [
-        "you are an idiot",
-        "this idea is stupid",
-        "shut up and leave"
-    ],
-    "target": [
-        "I disagree with what you said.",
-        "I do not think this idea is a good one.",
-        "Please stop talking and leave."
-    ]
-})
+# Replace with real ParaDetox loading before serious training.
+df = pd.DataFrame(
+    {
+        "source": [
+            "you are an idiot",
+            "this idea is stupid",
+            "shut up and leave",
+        ],
+        "target": [
+            "I disagree with what you said.",
+            "I do not think this idea is a good one.",
+            "Please stop talking and leave.",
+        ],
+    }
+)
 
 dataset = Dataset.from_pandas(df)
 
@@ -30,22 +40,24 @@ tokenizer = T5Tokenizer.from_pretrained(MODEL_NAME)
 model = T5ForConditionalGeneration.from_pretrained(MODEL_NAME)
 model = model.to(device)
 
+
 def preprocess(example):
     model_input = "rewrite toxic to neutral: " + example["source"]
     inputs = tokenizer(
         model_input,
         max_length=MAX_INPUT_LEN,
         truncation=True,
-        padding="max_length"
+        padding="max_length",
     )
     targets = tokenizer(
         text_target=example["target"],
         max_length=MAX_TARGET_LEN,
         truncation=True,
-        padding="max_length"
+        padding="max_length",
     )
     inputs["labels"] = targets["input_ids"]
     return inputs
+
 
 tokenized_dataset = dataset.map(preprocess, remove_columns=dataset.column_names)
 
@@ -69,15 +81,13 @@ trainer = Seq2SeqTrainer(
     args=args,
     train_dataset=tokenized_dataset,
     eval_dataset=tokenized_dataset,
-    # tokenizer=tokenizer,
-    data_collator=data_collator
+    data_collator=data_collator,
 )
 
 trainer.train()
 
-# Example inference
 text = "rewrite toxic to neutral: you are useless"
 inputs = tokenizer(text, return_tensors="pt", truncation=True)
-inputs = {k: v.to(device) for k, v in inputs.items()}
+inputs = {key: value.to(device) for key, value in inputs.items()}
 output_ids = model.generate(**inputs, max_length=64)
 print(tokenizer.decode(output_ids[0], skip_special_tokens=True))

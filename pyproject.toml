@@ -1,0 +1,39 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "toxic-style-transfer"
+version = "0.1.0"
+description = "Two-stage toxic-to-neutral style transfer pipeline."
+readme = "README.md"
+requires-python = ">=3.9"
+dependencies = [
+  "accelerate>=1.1.0",
+  "bert-score>=0.3.13",
+  "datasets",
+  "detoxify>=0.5.2",
+  "fastapi>=0.115.0",
+  "numpy<2",
+  "openai>=1.99.0",
+  "pandas",
+  "protobuf>=5.0.0",
+  "python-dotenv>=1.0.0",
+  "sentencepiece>=0.2.0",
+  "torch",
+  "transformers",
+  "uvicorn>=0.30.0",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8.0.0"]
+
+[project.scripts]
+classify-toxicity = "toxic_style_transfer.classify:main"
+evaluate-rewriters = "toxic_style_transfer.evaluate_rewriters:main"
+prepare-paradetox = "toxic_style_transfer.prepare_paradetox:main"
+train-rewriter = "toxic_style_transfer.train_rewriter:main"
+toxicity-api = "toxic_style_transfer.api:run"
+
+[tool.setuptools.packages.find]
+where = ["src"]

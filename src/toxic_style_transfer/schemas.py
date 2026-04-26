@@ -91,6 +91,24 @@ class ToxicityClassification:
         }
 
 
+@dataclass(frozen=True)
+class TextTransformation:
+    """Output of the full detect-and-rewrite pipeline."""
+
+    input_text: str
+    output_text: str
+    classification: ToxicityClassification
+    rewritten: bool = False
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "input_text": self.input_text,
+            "output_text": self.output_text,
+            "rewritten": self.rewritten,
+            "classification": self.classification.to_dict(),
+        }
+
+
 def _optional_int(value: Any) -> Optional[int]:
     if value is None:
         return None

@@ -1,0 +1,58 @@
+{
+  "dataset_size": 3,
+  "systems": [
+    {
+      "system": "baseline",
+      "model_name_or_path": "Ribin/t5-base_detoxParaphraser",
+      "aggregate_metrics": {
+        "mean_toxicity_score": 0.5234040291203806,
+        "mean_formality_score": 0.8503156900405884,
+        "mean_bert_score_precision": 0.29879139736294746,
+        "mean_bert_score_recall": 0.37928154071172077,
+        "mean_bert_score_f1": 0.3376320203145345,
+        "mean_bart_fluency_score": -6.727712154388428
+      },
+      "examples": [
+        {
+          "source": "you are an idiot",
+          "reference": "I disagree with what you said.",
+          "prediction": "You are not smart",
+          "metrics": {
+            "toxicity_score": 0.738464891910553,
+            "formality_score": 0.9937659502029419,
+            "bert_score_precision": 0.20798178017139435,
+            "bert_score_recall": 0.2744278609752655,
+            "bert_score_f1": 0.24222637712955475,
+            "bart_fluency_score": -6.516520023345947
+          }
+        },
+        {
+          "source": "this idea is stupid",
+          "reference": "I do not think this idea is a good one.",
+          "prediction": "This idea is not good",
+          "metrics": {
+            "toxicity_score": 0.0009358141105622053,
+            "formality_score": 0.9899224638938904,
+            "bert_score_precision": 0.63370281457901,
+            "bert_score_recall": 0.4604957103729248,
+            "bert_score_f1": 0.5464655160903931,
+            "bart_fluency_score": -6.345030307769775
+          }
+        },
+        {
+          "source": "shut up and leave",
+          "reference": "Please stop talking and leave.",
+          "prediction": "Rewrite toxic to neutral: Shut up and leave",
+          "metrics": {
+            "toxicity_score": 0.8308113813400269,
+            "formality_score": 0.5672586560249329,
+            "bert_score_precision": 0.054689597338438034,
+            "bert_score_recall": 0.40292105078697205,
+            "bert_score_f1": 0.2242041677236557,
+            "bart_fluency_score": -7.3215861320495605
+          }
+        }
+      ]
+    }
+  ]
+}

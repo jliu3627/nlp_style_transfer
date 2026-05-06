@@ -23,6 +23,12 @@ DEFAULT_BARTSCORE_CHECKPOINT = "facebook/bart-base"
 DEFAULT_BERTSCORE_MODEL = "roberta-base"
 
 
+def _default_device_name() -> str:
+    if torch.backends.mps.is_available():
+        return "mps"
+    return "cpu"
+
+
 def _ensure_local_model_cache() -> None:
     cache_root = Path.cwd() / ".model_cache"
     torch_home = cache_root / "torch"
@@ -32,11 +38,10 @@ def _ensure_local_model_cache() -> None:
     os.environ.setdefault("TORCH_HOME", str(torch_home))
     os.environ.setdefault("HF_HOME", str(hf_home))
     os.environ.setdefault("TRANSFORMERS_CACHE", str(hf_home / "transformers"))
-    os.environ.setdefault("REWRITE_DEVICE", "cpu")
 
 
 def _evaluation_device() -> str:
-    return os.getenv("EVAL_DEVICE", "cpu")
+    return _default_device_name()
 
 
 @dataclass(frozen=True)
@@ -54,7 +59,7 @@ class DetoxifyScorer:
         _ensure_local_model_cache()
         from detoxify import Detoxify
 
-        self._model = Detoxify(model_name)
+        self._model = Detoxify(model_name, device=_evaluation_device())
 
     def score(self, texts: Sequence[str]) -> List[float]:
         predictions = self._model.predict(list(texts))
@@ -284,8 +289,8 @@ def load_parallel_dataset(input_csv: Path, limit: Optional[int] = None) -> pd.Da
 def _build_rewriter(model_name_or_path: str) -> Seq2SeqRewriter:
     path = Path(model_name_or_path)
     if path.exists():
-        return Seq2SeqRewriter(checkpoint_path=str(path), device_name=os.getenv("REWRITE_DEVICE"))
-    return Seq2SeqRewriter(model_name=model_name_or_path, device_name=os.getenv("REWRITE_DEVICE"))
+        return Seq2SeqRewriter(checkpoint_path=str(path))
+    return Seq2SeqRewriter(model_name=model_name_or_path)
 
 
 def _batched(items: Sequence[str], batch_size: int) -> Iterable[Sequence[str]]:

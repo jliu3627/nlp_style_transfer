@@ -13,6 +13,12 @@ DEFAULT_REWRITE_MODEL = "Ribin/t5-base_detoxParaphraser"
 DEFAULT_MAX_NEW_TOKENS = 96
 
 
+def _default_device_name() -> str:
+    import torch
+
+    return "mps" if torch.backends.mps.is_available() else "cpu"
+
+
 class Seq2SeqRewriter:
     """Rewrite toxic text into neutral text with a transformer model."""
 
@@ -21,7 +27,6 @@ class Seq2SeqRewriter:
         model_name: Optional[str] = None,
         checkpoint_path: Optional[str] = None,
         max_new_tokens: Optional[int] = None,
-        device_name: Optional[str] = None,
     ) -> None:
         load_dotenv()
         self._model_name = (
@@ -36,7 +41,6 @@ class Seq2SeqRewriter:
             or os.getenv("REWRITE_MAX_NEW_TOKENS")
             or DEFAULT_MAX_NEW_TOKENS
         )
-        self._device_name = device_name or os.getenv("REWRITE_DEVICE")
         self._tokenizer: Optional[Any] = None
         self._model: Optional[Any] = None
         self._device: Optional[Any] = None
@@ -92,10 +96,7 @@ class Seq2SeqRewriter:
     def _get_device(self):
         if self._device is None:
             torch = self._torch()
-            if self._device_name:
-                self._device = torch.device(self._device_name)
-            else:
-                self._device = torch.device("mps" if torch.backends.mps.is_available() else "cpu")
+            self._device = torch.device(_default_device_name())
         return self._device
 
     @staticmethod

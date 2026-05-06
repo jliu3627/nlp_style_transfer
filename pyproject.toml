@@ -20,6 +20,7 @@ dependencies = [
   "protobuf>=5.0.0",
   "python-dotenv>=1.0.0",
   "sentencepiece>=0.2.0",
+  "spacy>=3.7.0,<3.8.0",
   "torch",
   "transformers",
   "uvicorn>=0.30.0",
@@ -32,6 +33,7 @@ dev = ["pytest>=8.0.0"]
 classify-toxicity = "toxic_style_transfer.classify:main"
 evaluate-rewriters = "toxic_style_transfer.evaluate_rewriters:main"
 prepare-paradetox = "toxic_style_transfer.prepare_paradetox:main"
+sweep-rewriters = "toxic_style_transfer.sweep_rewriter:main"
 train-rewriter = "toxic_style_transfer.train_rewriter:main"
 toxicity-api = "toxic_style_transfer.api:run"
 

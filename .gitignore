@@ -6,3 +6,6 @@ __pycache__/
 *.egg-info/
 .model_cache/
 rewrite_model/
+models/
+outputs/
+.DS_Store

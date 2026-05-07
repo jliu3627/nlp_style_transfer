@@ -67,6 +67,7 @@ class ToxicityClassification:
             for item in data.get("toxic_spans", [])
             if isinstance(item, dict)
         ]
+        spans = [_normalize_span_offsets(text, span) for span in spans]
         categories = _valid_categories(data.get("categories", []))
         if not categories:
             categories = sorted({span.category for span in spans if span.category != "other"})
@@ -116,6 +117,34 @@ def _optional_int(value: Any) -> Optional[int]:
         return int(value)
     except (TypeError, ValueError):
         return None
+
+
+def _normalize_span_offsets(text: str, span: ToxicSpan) -> ToxicSpan:
+    if _span_offsets_match(text, span):
+        return span
+
+    if not span.text:
+        return ToxicSpan(text=span.text, start=None, end=None, category=span.category)
+
+    start = text.lower().find(span.text.lower())
+    if start < 0:
+        return ToxicSpan(text=span.text, start=None, end=None, category=span.category)
+
+    end = start + len(span.text)
+    return ToxicSpan(
+        text=text[start:end],
+        start=start,
+        end=end,
+        category=span.category,
+    )
+
+
+def _span_offsets_match(text: str, span: ToxicSpan) -> bool:
+    if span.start is None or span.end is None:
+        return False
+    if span.start < 0 or span.end <= span.start or span.end > len(text):
+        return False
+    return text[span.start:span.end].lower() == span.text.lower()
 
 
 def _clamp_score(value: Any) -> float:

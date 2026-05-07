@@ -1,0 +1,423 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Toxic-to-Neutral Rewriter</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #10131a;
+      --panel: #171b24;
+      --panel-strong: #1f2530;
+      --text: #eef2f8;
+      --muted: #aab3c2;
+      --line: #303747;
+      --accent: #f4c95d;
+      --blue: #78a6ff;
+      --danger: #ff7d7d;
+      --ok: #7bd89c;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: var(--bg);
+      color: var(--text);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    main {
+      width: min(1180px, calc(100vw - 32px));
+      margin: 0 auto;
+      padding: 28px 0 36px;
+    }
+
+    header {
+      display: flex;
+      align-items: end;
+      justify-content: space-between;
+      gap: 18px;
+      margin-bottom: 22px;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 28px;
+      font-weight: 700;
+      line-height: 1.15;
+      letter-spacing: 0;
+    }
+
+    .status {
+      min-height: 28px;
+      color: var(--muted);
+      font-size: 14px;
+      text-align: right;
+    }
+
+    .input-band {
+      display: grid;
+      gap: 12px;
+      margin-bottom: 18px;
+    }
+
+    textarea {
+      width: 100%;
+      min-height: 168px;
+      resize: vertical;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--panel);
+      color: var(--text);
+      padding: 14px;
+      font: 15px/1.55 ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+      outline: none;
+    }
+
+    textarea:focus {
+      border-color: var(--blue);
+      box-shadow: 0 0 0 3px rgba(120, 166, 255, 0.16);
+    }
+
+    .controls {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      flex-wrap: wrap;
+    }
+
+    .threshold {
+      display: inline-grid;
+      grid-template-columns: auto minmax(140px, 240px) 42px;
+      align-items: center;
+      gap: 10px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    input[type="range"] {
+      accent-color: var(--blue);
+    }
+
+    button {
+      min-height: 40px;
+      border: 0;
+      border-radius: 8px;
+      background: var(--blue);
+      color: #08101f;
+      padding: 0 18px;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    button:disabled {
+      cursor: wait;
+      opacity: 0.65;
+    }
+
+    .summary {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+      margin: 18px 0;
+    }
+
+    .metric {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--panel);
+      padding: 12px;
+    }
+
+    .metric-label {
+      color: var(--muted);
+      font-size: 12px;
+      text-transform: uppercase;
+    }
+
+    .metric-value {
+      margin-top: 6px;
+      font-size: 18px;
+      font-weight: 700;
+    }
+
+    .comparison {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    section {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--panel);
+      min-height: 280px;
+      overflow: hidden;
+    }
+
+    .section-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      border-bottom: 1px solid var(--line);
+      background: var(--panel-strong);
+      padding: 10px 12px;
+    }
+
+    h2 {
+      margin: 0;
+      font-size: 14px;
+      font-weight: 700;
+      letter-spacing: 0;
+    }
+
+    .badge {
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .text-view {
+      min-height: 230px;
+      padding: 14px;
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+      font-size: 15px;
+      line-height: 1.6;
+    }
+
+    mark {
+      border-radius: 4px;
+      background: rgba(255, 125, 125, 0.28);
+      color: var(--text);
+      padding: 1px 3px;
+      outline: 1px solid rgba(255, 125, 125, 0.45);
+    }
+
+    .spans {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-top: 14px;
+    }
+
+    .span-pill {
+      border: 1px solid rgba(244, 201, 93, 0.35);
+      border-radius: 999px;
+      color: var(--accent);
+      padding: 4px 8px;
+      font-size: 12px;
+    }
+
+    .empty {
+      color: var(--muted);
+    }
+
+    @media (max-width: 760px) {
+      header,
+      .comparison,
+      .summary {
+        grid-template-columns: 1fr;
+        display: grid;
+      }
+
+      .status {
+        text-align: left;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <h1>Toxic-to-Neutral Rewriter</h1>
+      <div class="status" id="status">Ready</div>
+    </header>
+
+    <div class="input-band">
+      <textarea id="inputText">I read through the proposal and the structure mostly makes sense. Calling the analyst an idiot made the feedback harder to use. The timeline risk still needs a mitigation plan before Friday. That budget argument was stupid, even though the underlying concern is valid. Thanks for sending the update.</textarea>
+      <div class="controls">
+        <label class="threshold">
+          Threshold
+          <input id="threshold" type="range" min="0" max="1" step="0.05" value="0.5">
+          <span id="thresholdValue">0.50</span>
+        </label>
+        <button id="rewriteButton" type="button">Rewrite</button>
+      </div>
+    </div>
+
+    <div class="summary" aria-live="polite">
+      <div class="metric">
+        <div class="metric-label">Toxicity</div>
+        <div class="metric-value" id="toxicityScore">-</div>
+      </div>
+      <div class="metric">
+        <div class="metric-label">Categories</div>
+        <div class="metric-value" id="categories">-</div>
+      </div>
+      <div class="metric">
+        <div class="metric-label">Rewrite</div>
+        <div class="metric-value" id="rewriteState">-</div>
+      </div>
+    </div>
+
+    <div class="comparison">
+      <section>
+        <div class="section-head">
+          <h2>Before</h2>
+          <span class="badge">Toxic spans highlighted</span>
+        </div>
+        <div class="text-view" id="beforeView"><span class="empty">Input text will appear here.</span></div>
+      </section>
+
+      <section>
+        <div class="section-head">
+          <h2>After</h2>
+          <span class="badge" id="afterBadge">Rewritten output</span>
+        </div>
+        <div class="text-view" id="afterView"><span class="empty">Output text will appear here.</span></div>
+      </section>
+    </div>
+  </main>
+
+  <script>
+    const inputText = document.querySelector("#inputText");
+    const threshold = document.querySelector("#threshold");
+    const thresholdValue = document.querySelector("#thresholdValue");
+    const button = document.querySelector("#rewriteButton");
+    const statusEl = document.querySelector("#status");
+    const beforeView = document.querySelector("#beforeView");
+    const afterView = document.querySelector("#afterView");
+    const toxicityScore = document.querySelector("#toxicityScore");
+    const categories = document.querySelector("#categories");
+    const rewriteState = document.querySelector("#rewriteState");
+    const afterBadge = document.querySelector("#afterBadge");
+
+    threshold.addEventListener("input", () => {
+      thresholdValue.textContent = Number(threshold.value).toFixed(2);
+    });
+
+    button.addEventListener("click", rewriteText);
+
+    function escapeHtml(value) {
+      return value
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+    }
+
+    function highlightedText(text, spans) {
+      const validSpans = [...spans]
+        .map((span) => normalizedSpan(text, span))
+        .filter((span) => span !== null)
+        .sort((a, b) => a.start - b.start);
+
+      let cursor = 0;
+      let html = "";
+      for (const span of validSpans) {
+        if (span.start < cursor) {
+          continue;
+        }
+        html += escapeHtml(text.slice(cursor, span.start));
+        const label = `${span.category}: ${span.text}`;
+        html += `<mark title="${escapeHtml(label)}">${escapeHtml(text.slice(span.start, span.end))}</mark>`;
+        cursor = span.end;
+      }
+      html += escapeHtml(text.slice(cursor));
+      return html || '<span class="empty">No input text.</span>';
+    }
+
+    function normalizedSpan(text, span) {
+      if (
+        Number.isInteger(span.start) &&
+        Number.isInteger(span.end) &&
+        span.start >= 0 &&
+        span.end > span.start &&
+        span.end <= text.length &&
+        text.slice(span.start, span.end).toLowerCase() === String(span.text).toLowerCase()
+      ) {
+        return span;
+      }
+
+      const searchText = String(span.text || "");
+      const start = text.toLowerCase().indexOf(searchText.toLowerCase());
+      if (!searchText || start < 0) {
+        return null;
+      }
+      return {
+        ...span,
+        start,
+        end: start + searchText.length,
+        text: text.slice(start, start + searchText.length),
+      };
+    }
+
+    function renderResult(result) {
+      const classification = result.classification;
+      beforeView.innerHTML = highlightedText(result.input_text, classification.toxic_spans || []);
+      afterView.textContent = result.output_text;
+      toxicityScore.textContent = classification.toxicity_score.toFixed(2);
+      categories.textContent = classification.categories.length ? classification.categories.join(", ") : "none";
+      rewriteState.textContent = result.rewritten ? "rewritten" : "unchanged";
+      rewriteState.style.color = result.rewritten ? "var(--ok)" : "var(--muted)";
+      afterBadge.textContent = result.rewritten ? "Rewritten output" : "Original text kept";
+
+      const spans = classification.toxic_spans || [];
+      if (spans.length) {
+        const spanList = document.createElement("div");
+        spanList.className = "spans";
+        for (const span of spans) {
+          const pill = document.createElement("span");
+          pill.className = "span-pill";
+          pill.textContent = `${span.category}: ${span.text}`;
+          spanList.appendChild(pill);
+        }
+        beforeView.appendChild(spanList);
+      }
+    }
+
+    async function rewriteText() {
+      const text = inputText.value.trim();
+      if (!text) {
+        statusEl.textContent = "Add paragraph text first.";
+        return;
+      }
+
+      button.disabled = true;
+      statusEl.textContent = "Rewriting...";
+
+      try {
+        const response = await fetch("/transform", {
+          method: "POST",
+          headers: {"Content-Type": "application/json"},
+          body: JSON.stringify({
+            text,
+            toxicity_threshold: Number(threshold.value),
+          }),
+        });
+
+        if (!response.ok) {
+          throw new Error(`Request failed with status ${response.status}`);
+        }
+
+        const payload = await response.json();
+        renderResult(payload.results[0]);
+        statusEl.textContent = "Done";
+      } catch (error) {
+        statusEl.textContent = error.message;
+      } finally {
+        button.disabled = false;
+      }
+    }
+  </script>
+</body>
+</html>

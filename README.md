@@ -23,6 +23,7 @@ There are two main uses of that architecture in this repo:
    - accepts one string or a list of strings
    - classifies toxicity
    - rewrites only when the toxicity score crosses a threshold
+   - serves a small browser UI at `/` with before/after text and toxic-span highlighting
 
 2. **Offline rewrite evaluation / model comparison**
    - runs detoxification models directly on a parallel dataset
@@ -118,6 +119,12 @@ or
 uvicorn toxic_style_transfer.api:app --host 127.0.0.1 --port 8000
 ```
 
+Then open the local frontend:
+
+```text
+http://127.0.0.1:8000/
+```
+
 Example request with one string:
 
 ```bash
@@ -136,6 +143,12 @@ curl -X POST http://127.0.0.1:8000/transform \
 
 The response includes per-item metadata plus `output_text` for single input or `output_texts` for batch input.
 
+By default the API uses the OpenAI classifier and the Seq2Seq rewriter. It caches the default pipeline after the first request, so the first transform may be slower while clients/models warm up. To run the API with the local heuristic classifier for quick debugging, set:
+
+```bash
+TOXICITY_PROVIDER=heuristic toxicity-api
+```
+
 ## Rewriter Model
 
 The rewrite stage uses a Seq2Seq transformer. By default it loads `Ribin/t5-base_detoxParaphraser`, a T5 model fine-tuned for toxic-to-neutral rewriting on ParaDetox-style data.
@@ -149,7 +162,9 @@ export REWRITE_MODEL_PATH=models/rewriter
 Train a custom checkpoint from a CSV with `source,target` columns:
 
 ```bash
-train-rewriter --input-csv data/paradetox_train.csv --output-dir models/rewriter
+train-rewriter \
+  --input-csv data/paradetox/paradetox_train.csv \
+  --output-dir models/rewriter
 ```
 
 ## Evaluation
@@ -333,6 +348,15 @@ train-rewriter \
   --output-dir models/rewriter_custom
 ```
 
+If you also want the local pipeline/API to start using that checkpoint automatically after training, add:
+
+```bash
+train-rewriter \
+  --input-csv data/paradetox/paradetox_train.csv \
+  --output-dir models/rewriter_custom \
+  --activate-model
+```
+
 You can later change hyperparameters such as:
 
 - `--model-name`
@@ -390,6 +414,33 @@ evaluate-rewriters \
   --system custom=models/rewriter_custom \
   --output outputs/evaluations/paradetox_baseline_vs_custom.json
 ```
+
+### Optional: Hyperparameter sweep
+
+To try several training settings in one run, use the sweep runner. By default it keeps the
+same training setup focus and sweeps hyperparameters around `google/flan-t5-small`, while
+comparing each trial directly against the baseline model `Ribin/t5-base_detoxParaphraser`.
+
+```bash
+sweep-rewriters \
+  --input-csv data/paradetox/paradetox_train.csv \
+  --eval-limit 300
+```
+
+The default sweep grid covers:
+
+- learning rates: `5e-5`, `3e-5`, `2e-5`
+- epochs: `3`, `5`, `8`
+- batch sizes: `4`, `8`
+- seeds: `42`, `123`
+
+You can narrow or override the grid by repeating flags such as `--learning-rate`, `--epochs`,
+`--batch-size`, `--seed`, or `--model-name`.
+
+Sweep checkpoints are written under `models/sweeps/`, and aggregate sweep results are written to:
+
+- `outputs/evaluations/sweeps/sweep_summary.csv`
+- `outputs/evaluations/sweeps/sweep_summary.json`
 
 This produces:
 

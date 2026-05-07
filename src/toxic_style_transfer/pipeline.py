@@ -25,15 +25,21 @@ class ToxicityRewritePipeline:
         self,
         classifier: Optional[ToxicityClassifier] = None,
         rewriter: Optional[RewriterClient] = None,
+        classifier_provider: str = "openai",
         toxicity_threshold: float = 0.5,
     ) -> None:
-        self._classifier = classifier or ToxicityClassifier(provider="openai")
+        self._classifier = classifier or ToxicityClassifier(provider=classifier_provider)
         self._rewriter = rewriter or Seq2SeqRewriter()
         self._toxicity_threshold = toxicity_threshold
 
-    def transform_text(self, text: str) -> TextTransformation:
+    def transform_text(
+        self,
+        text: str,
+        toxicity_threshold: Optional[float] = None,
+    ) -> TextTransformation:
         classification = self._classifier.classify(text)
-        should_rewrite = classification.is_toxic and classification.toxicity_score >= self._toxicity_threshold
+        threshold = self._toxicity_threshold if toxicity_threshold is None else toxicity_threshold
+        should_rewrite = classification.is_toxic and classification.toxicity_score >= threshold
         output_text = (
             self._rewriter.rewrite(text, classification)
             if should_rewrite
@@ -46,5 +52,12 @@ class ToxicityRewritePipeline:
             rewritten=should_rewrite and output_text != text,
         )
 
-    def transform_many(self, texts: Iterable[str]) -> List[TextTransformation]:
-        return [self.transform_text(text) for text in texts]
+    def transform_many(
+        self,
+        texts: Iterable[str],
+        toxicity_threshold: Optional[float] = None,
+    ) -> List[TextTransformation]:
+        return [
+            self.transform_text(text, toxicity_threshold=toxicity_threshold)
+            for text in texts
+        ]

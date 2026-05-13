@@ -1,0 +1,2 @@
+system,mean_toxicity_score,mean_formality_score,mean_bert_score_precision,mean_bert_score_recall,mean_bert_score_f1,mean_bart_fluency_score
+custom,0.11078455783473917,0.37847585410799217,0.7161897207728788,0.7339884309971682,0.7242299490360709,-6.355464100294475

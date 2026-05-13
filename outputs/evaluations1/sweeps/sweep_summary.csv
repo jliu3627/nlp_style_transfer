@@ -1,0 +1,4 @@
+model_name,learning_rate,epochs,batch_size,seed,validation_split,max_input_length,max_target_length,trial_name,output_dir,status,error
+google/flan-t5-large,7e-05,6,1,42,0.1,128,128,google_flan_t5_large_lr7em05_e6_b1_seed42,models/sweeps/google_flan_t5_large_lr7em05_e6_b1_seed42,failed,"TypeError(""Seq2SeqTrainingArguments.__init__() got an unexpected keyword argument 'use_mps_device'"")"
+google/flan-t5-large,7e-05,6,1,123,0.1,128,128,google_flan_t5_large_lr7em05_e6_b1_seed123,models/sweeps/google_flan_t5_large_lr7em05_e6_b1_seed123,failed,"TypeError(""Seq2SeqTrainingArguments.__init__() got an unexpected keyword argument 'use_mps_device'"")"
+google/flan-t5-large,7e-05,6,1,77,0.1,128,128,google_flan_t5_large_lr7em05_e6_b1_seed77,models/sweeps/google_flan_t5_large_lr7em05_e6_b1_seed77,failed,"TypeError(""Seq2SeqTrainingArguments.__init__() got an unexpected keyword argument 'use_mps_device'"")"

@@ -1,0 +1,44 @@
+[
+  {
+    "model_name": "google/flan-t5-large",
+    "learning_rate": 7e-05,
+    "epochs": 6,
+    "batch_size": 1,
+    "seed": 42,
+    "validation_split": 0.1,
+    "max_input_length": 128,
+    "max_target_length": 128,
+    "trial_name": "google_flan_t5_large_lr7em05_e6_b1_seed42",
+    "output_dir": "models/sweeps/google_flan_t5_large_lr7em05_e6_b1_seed42",
+    "status": "failed",
+    "error": "TypeError(\"Seq2SeqTrainingArguments.__init__() got an unexpected keyword argument 'use_mps_device'\")"
+  },
+  {
+    "model_name": "google/flan-t5-large",
+    "learning_rate": 7e-05,
+    "epochs": 6,
+    "batch_size": 1,
+    "seed": 123,
+    "validation_split": 0.1,
+    "max_input_length": 128,
+    "max_target_length": 128,
+    "trial_name": "google_flan_t5_large_lr7em05_e6_b1_seed123",
+    "output_dir": "models/sweeps/google_flan_t5_large_lr7em05_e6_b1_seed123",
+    "status": "failed",
+    "error": "TypeError(\"Seq2SeqTrainingArguments.__init__() got an unexpected keyword argument 'use_mps_device'\")"
+  },
+  {
+    "model_name": "google/flan-t5-large",
+    "learning_rate": 7e-05,
+    "epochs": 6,
+    "batch_size": 1,
+    "seed": 77,
+    "validation_split": 0.1,
+    "max_input_length": 128,
+    "max_target_length": 128,
+    "trial_name": "google_flan_t5_large_lr7em05_e6_b1_seed77",
+    "output_dir": "models/sweeps/google_flan_t5_large_lr7em05_e6_b1_seed77",
+    "status": "failed",
+    "error": "TypeError(\"Seq2SeqTrainingArguments.__init__() got an unexpected keyword argument 'use_mps_device'\")"
+  }
+]
